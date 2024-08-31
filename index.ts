@@ -1,7 +1,7 @@
 import { ethers, isError } from "ethers";
 import dotenv from "dotenv";
 import axios from "axios";
-import chalk from "chalk"; // Import chalk
+import chalk from "chalk"; 
 import type { NodeInfo } from "./response";
 import type { Fragments } from "./responseFragment";
 import { exit } from "process";
@@ -14,10 +14,11 @@ const {
   CONTRACT_ADDRESS: contractAddress,
   CONTRACT_RIZ: contractAddressRiz,
 } = process.env;
+
 if (!providerUrl || !privateKey || !contractAddress || !contractAddressRiz) {
   console.error(
     chalk.red(
-      "Please set PROVIDER_URL, PRIVATE_KEY, CONTRACT_ADDRESS in the .env file."
+      "Please set PROVIDER_URL, PRIVATE_KEY, CONTRACT_ADDRESS, CONTRACT_RIZ in the .env file."
     )
   );
   throw new Error("Environment variables missing");
@@ -172,4 +173,38 @@ async function executeProcess() {
   }
 }
 
-executeProcess();
+function displayRemainingTime(millisecondsLeft: number) {
+  let secondsLeft = Math.floor(millisecondsLeft / 1000);
+  const intervalId = setInterval(() => {
+    if (secondsLeft <= 0) {
+      clearInterval(intervalId);
+      return;
+    }
+
+    secondsLeft -= 1;
+    const hours = Math.floor(secondsLeft / 3600);
+    const minutes = Math.floor((secondsLeft % 3600) / 60);
+    const seconds = secondsLeft % 60;
+
+    console.log(
+      chalk.blue(
+        `Waktu yang tersisa sebelum menjalankan proses lagi: ${hours}h ${minutes}m ${seconds}s`
+      )
+    );
+  }, 1000);
+}
+
+async function main() {
+  await executeProcess();
+
+  const delayInMilliseconds = 12 * 60 * 60 * 1000; 
+  console.log(chalk.yellow("Proses selesai. Menunggu 12 jam sebelum menjalankan lagi..."));
+  
+  displayRemainingTime(delayInMilliseconds);
+  setTimeout(async () => {
+    console.log(chalk.yellow("Waktu tunggu selesai. Menjalankan proses lagi..."));
+    await main(); 
+  }, delayInMilliseconds);
+}
+
+main();
