@@ -164,7 +164,7 @@ async function executeProcess() {
       try {
         await callClaim();
       } catch {
-        console.error(chalk.red("Error calling claim function."));
+        console.error(chalk.red("Error Proses Claim"));
       }
     }
   } catch {
@@ -198,8 +198,8 @@ async function main() {
   
   await executeProcess();
 
-  const delayInMilliseconds = 12 * 60 * 60 * 1000; 
-  console.log(chalk.purple("\nProses selesai. Menunggu 12 jam sebelum menjalankan lagi..."));
+  const delayInMilliseconds = 5 * 60 * 1000; 
+  console.log(chalk.purple("\nProses selesai. Menunggu 5 menit sebelum menjalankan lagi..."));
 
   displayRemainingTime(delayInMilliseconds);
 
