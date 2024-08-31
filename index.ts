@@ -187,7 +187,7 @@ function displayRemainingTime(millisecondsLeft: number) {
     const seconds = secondsLeft % 60;
 
     process.stdout.write(
-      `\r${chalk.blue(
+      `\r${chalk.yellow(
         `Waktu yang tersisa sebelum menjalankan proses lagi: ${hours}h ${minutes}m ${seconds}s`
       )}`
     );
@@ -199,12 +199,12 @@ async function main() {
   await executeProcess();
 
   const delayInMilliseconds = 12 * 60 * 60 * 1000; 
-  console.log(chalk.yellow("\nProses selesai. Menunggu 12 jam sebelum menjalankan lagi..."));
+  console.log(chalk.purple("\nProses selesai. Menunggu 12 jam sebelum menjalankan lagi..."));
 
   displayRemainingTime(delayInMilliseconds);
 
   setTimeout(async () => {
-    console.log(chalk.yellow("\nWaktu tunggu selesai. Menjalankan proses lagi..."));
+    console.log(chalk.purple("\nWaktu tunggu selesai. Menjalankan proses lagi..."));
     await main(); 
   }, delayInMilliseconds);
 }
