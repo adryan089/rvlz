@@ -70,7 +70,7 @@ async function checkClaimAble() {
       data,
     });
     const fragmentCount = parseInt(response);
-    console.log(chalk.green(`Claimable fragments: ${fragmentCount}`));
+    console.log(chalk.green(`Fragment yang tersedia di klaim : ${fragmentCount}`));
     return fragmentCount;
   } catch {
     console.error(chalk.red("Error checking claimable fragments."));
