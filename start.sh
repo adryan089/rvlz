@@ -12,5 +12,5 @@ stop_timer() {
 }
 
 start_timer
-bun --env-file=/root/claim-rivalz-fragment/.env  /root/claim-rivalz-fragment/index.ts
+bun --env-file=/root/rvlz/.env  /root/rvlz/index.ts
 stop_timer
