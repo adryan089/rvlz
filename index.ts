@@ -1,7 +1,7 @@
 import { ethers, isError } from "ethers";
 import dotenv from "dotenv";
 import axios from "axios";
-import chalk from "chalk"; 
+import chalk from "chalk"; // Import chalk untuk menambahkan warna ke output konsol
 import type { NodeInfo } from "./response";
 import type { Fragments } from "./responseFragment";
 import { exit } from "process";
@@ -186,23 +186,25 @@ function displayRemainingTime(millisecondsLeft: number) {
     const minutes = Math.floor((secondsLeft % 3600) / 60);
     const seconds = secondsLeft % 60;
 
-    console.log(
-      chalk.blue(
+    process.stdout.write(
+      `\r${chalk.blue(
         `Waktu yang tersisa sebelum menjalankan proses lagi: ${hours}h ${minutes}m ${seconds}s`
-      )
+      )}`
     );
   }, 1000);
 }
 
 async function main() {
+  
   await executeProcess();
 
   const delayInMilliseconds = 12 * 60 * 60 * 1000; 
-  console.log(chalk.yellow("Proses selesai. Menunggu 12 jam sebelum menjalankan lagi..."));
-  
+  console.log(chalk.yellow("\nProses selesai. Menunggu 12 jam sebelum menjalankan lagi..."));
+
   displayRemainingTime(delayInMilliseconds);
+
   setTimeout(async () => {
-    console.log(chalk.yellow("Waktu tunggu selesai. Menjalankan proses lagi..."));
+    console.log(chalk.yellow("\nWaktu tunggu selesai. Menjalankan proses lagi..."));
     await main(); 
   }, delayInMilliseconds);
 }
