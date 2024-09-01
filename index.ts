@@ -1,7 +1,7 @@
 import { ethers, isError } from "ethers";
 import dotenv from "dotenv";
 import axios from "axios";
-import chalk from "chalk"; // Import chalk untuk menambahkan warna ke output konsol
+import chalk from "chalk"; 
 import type { NodeInfo } from "./response";
 import type { Fragments } from "./responseFragment";
 import { exit } from "process";
@@ -45,7 +45,7 @@ async function initiateSignatureRequest(): Promise<object> {
     const currentTimestamp = Math.floor(Date.now());
     const dataSign = `Sign in to Rivalz with OTP: ${currentTimestamp}`;
     const signature = await wallet.signMessage(dataSign);
-    console.log(chalk.green("Signature request initiated successfully."));
+    process.stdout.write(chalk.green("Signature request initiated successfully.") + "\r");
     return {
       address: wallet.address,
       signature,
@@ -53,7 +53,7 @@ async function initiateSignatureRequest(): Promise<object> {
       referralId: "",
     };
   } catch {
-    console.error(chalk.red("Error signing data."));
+    process.stdout.write(chalk.red("Error signing data.") + "\r");
     throw new Error("Failed to sign data");
   }
 }
@@ -70,10 +70,9 @@ async function checkClaimAble() {
       data,
     });
     const fragmentCount = parseInt(response);
-    console.log(chalk.green(`Fragment yang tersedia di klaim : ${fragmentCount}`));
     return fragmentCount;
   } catch {
-    console.error(chalk.red("Error checking claimable fragments."));
+    process.stdout.write(chalk.red("Error checking claimable fragments.") + "\r");
     throw new Error("Failed to check claimable fragments");
   }
 }
@@ -87,26 +86,30 @@ async function loginWithWallet(data: object): Promise<string> {
       "content-type": "application/json; charset=UTF-8",
     };
     const response = await axios.post(url, JSON.stringify(data), { headers });
-    console.log(chalk.green("Logged in successfully with wallet."));
+    process.stdout.write(chalk.green("Logged in successfully with wallet.") + "\r");
     return response.data.data.accessToken;
   } catch {
-    console.error(chalk.red("Error logging in with wallet."));
+    process.stdout.write(chalk.red("Error logging in with wallet.") + "\r");
     throw new Error("Failed to log in with wallet");
   }
 }
 
-async function getScore(): Promise<Fragments> {
+async function getScore(): Promise<{ fragments: Fragments; intelDiscount: number }> {
   try {
     const url = `https://api.rivalz.ai/fragment/v1/fragment/collection/${wallet.address}`;
     const headers = {
       accept: "application/json",
     };
     const response = await axios.get(url, { headers });
-    console.log(chalk.green("Score retrieved successfully."));
-    return response.data as Fragments;
+    const data = response.data as Fragments;
+    const intelDiscount = data.intelDiscount; 
+
+    process.stdout.write(chalk.green("Wallet Authorization Successfuly!.") + "\r");
+
+    return { fragments: data, intelDiscount };
   } catch {
-    console.error(chalk.red("Error retrieving score."));
-    throw new Error("Failed to retrieve score");
+    process.stdout.write(chalk.red("Error retrieving score and Intel Discount.") + "\r");
+    throw new Error("Failed to retrieve score and Intel Discount");
   }
 }
 
@@ -118,95 +121,102 @@ async function findByWalletAddress(token: string): Promise<NodeInfo> {
   };
   try {
     const response = await axios.get(url, { headers });
-    console.log(chalk.green("Wallet address found successfully."));
+    process.stdout.write(chalk.green("Wallet address found successfully.") + "\r");
     return response.data as NodeInfo;
   } catch {
-    console.error(chalk.red("Error finding by wallet address."));
+    process.stdout.write(chalk.red("Error finding by wallet address.") + "\r");
     throw new Error("Failed to find by wallet address");
   }
 }
 
 function getRandomNonce(min: number, max: number): string {
   const nonce = Math.floor(Math.random() * (max - min + 1)) + min;
-  console.log(chalk.green(`Generated random nonce: ${nonce}`));
-  return nonce.toString().padStart(2, "0"); // Ensures the nonce is always two digits
+  process.stdout.write(chalk.green(`Generated random nonce: ${nonce}`) + "\r");
+  return nonce.toString().padStart(2, "0"); 
 }
 
 async function getRiz() {
   try {
-    console.log(chalk.green("Adding Riz for claim..."));
+    process.stdout.write(chalk.green("Adding Riz for claim...") + "\r");
     const tx = await contractRiz.claim();
-    console.log(chalk.green("Transaction hash:"), tx.hash);
+    process.stdout.write(chalk.green("Transaction hash:" + tx.hash) + "\r");
     const tx_complete = await tx.wait();
-    console.log(chalk.green("Transaction confirmed:"), tx_complete.hash);
+    process.stdout.write(chalk.green("Transaction confirmed:" + tx_complete.hash) + "\r");
   } catch {
-    console.error(chalk.red("Error claiming Riz."));
+    process.stdout.write(chalk.red("Error claiming Riz.") + "\r");
   }
 }
 
 async function callClaim() {
   try {
-    console.log(chalk.green("Calling claim function..."));
+    process.stdout.write(chalk.green("Calling claim function...") + "\r");
     const tx = await contract.claim();
-    console.log(chalk.green("Transaction hash:"), tx.hash);
+    process.stdout.write(chalk.green("Transaction hash:" + tx.hash) + "\r");
     const tx_complete = await tx.wait();
-    console.log(chalk.green("Transaction confirmed:"), tx_complete.hash);
+    process.stdout.write(chalk.green("Transaction confirmed:" + tx_complete.hash) + "\r");
     return tx_complete.hash;
   } catch {
-    console.error(chalk.red("Error during claim call."));
+    process.stdout.write(chalk.red("Error during claim call.") + "\r");
     throw new Error("Failed to execute claim call");
   }
 }
 
 async function executeProcess() {
+  let totalClaimed = 0;
   try {
+    const { fragments, intelDiscount } = await getScore();
+
+    // Menampilkan informasi awal
+    console.log(chalk.white(`\nWallet Address: ${wallet.address}`));
+    console.log(chalk.cyan(`Jumlah Fragment: ${await checkClaimAble()}`));
+    console.log(chalk.cyan(`Jumlah Intel Discount: ${intelDiscount}`));
+
     while ((await checkClaimAble()) > 0) {
       try {
         await callClaim();
+        totalClaimed++;
+        console.log(chalk.blue(`Total fragments claimed: ${totalClaimed}`)); 
       } catch {
-        console.error(chalk.red("Error Proses Claim"));
+        process.stdout.write(chalk.red("Error calling claim function.") + "\r");
       }
     }
   } catch {
-    console.error(chalk.red("Error in execute process."));
+    process.stdout.write(chalk.red("Error in execute process.") + "\r");
     exit(1);
   }
 }
 
-function displayRemainingTime(millisecondsLeft: number) {
+function displayRemainingTime(millisecondsLeft: number, callback: () => void) {
   let secondsLeft = Math.floor(millisecondsLeft / 1000);
   const intervalId = setInterval(() => {
     if (secondsLeft <= 0) {
       clearInterval(intervalId);
+      callback(); 
       return;
     }
 
     secondsLeft -= 1;
-    const hours = Math.floor(secondsLeft / 3600);
-    const minutes = Math.floor((secondsLeft % 3600) / 60);
+    const minutes = Math.floor(secondsLeft / 60);
     const seconds = secondsLeft % 60;
 
     process.stdout.write(
       `\r${chalk.yellow(
-        `Waktu yang tersisa sebelum menjalankan proses lagi: ${hours}h ${minutes}m ${seconds}s`
+        `Claim selanjutnya dalam : ${minutes}m ${seconds}s`
       )}`
     );
   }, 1000);
 }
 
+
 async function main() {
-  
+  console.clear();
   await executeProcess();
 
-  const delayInMilliseconds = 5 * 60 * 1000; 
-  console.log(chalk.purple("\nProses selesai. Menunggu 5 menit sebelum menjalankan lagi..."));
-
-  displayRemainingTime(delayInMilliseconds);
-
-  setTimeout(async () => {
-    console.log(chalk.purple("\nWaktu tunggu selesai. Menjalankan proses lagi..."));
-    await main(); 
-  }, delayInMilliseconds);
+  const delayInMilliseconds = 5 * 60 * 1000;
+  displayRemainingTime(delayInMilliseconds, async () => { 
+    await main();
+  });
 }
+
 
 main();
